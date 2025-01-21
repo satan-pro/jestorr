@@ -22,8 +22,7 @@ export function parseTorrent(torrent: string): bencodeTypeDict {
 }
 
 export function computeHash(content: string): string {
-   const buffer = Buffer.from(content, "binary");
    const hash = crypto.createHash("sha1");
-   hash.update("buffer");
+   hash.update(content);
    return hash.digest("hex");
 } 
