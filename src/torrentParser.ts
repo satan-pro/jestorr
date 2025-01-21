@@ -14,11 +14,11 @@ const crypto = require("crypto");
 */
 export function parseTorrent(torrent: string): bencodeTypeDict {
     const decoded = decodeBencode(torrent);
-    const announceDict: bencodeTypeDict = {};
-    announceDict["announce"] = (decoded as bencodeTypeDict)["announce"];
-    announceDict["info"] = (decoded as bencodeTypeDict)["info"];
+    const torrentDict: bencodeTypeDict = {};
+    torrentDict["announce"] = (decoded as bencodeTypeDict)["announce"];
+    torrentDict["info"] = (decoded as bencodeTypeDict)["info"];
 
-    return announceDict;
+    return torrentDict;
 }
 
 export function computeHash(content: string): string {

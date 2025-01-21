@@ -24,12 +24,29 @@ else if(args[2] === "info") {
             throw new Error("Invalid torrent file");
         }
 
-        const decodedInfo = dictEncoder(decoded["info"] as bencodeTypeDict);
+        // Save the info dict of the torrent file
+        const info = decoded["info"] as bencodeTypeDict;
+        
+        // Convert the info dict to a bencode string
+        const decodedInfo = dictEncoder(info);
 
-        console.log(`Tracker URL: ${decoded["announce"]}\nLength: ${(decoded["info"] as bencodeTypeDict)["length"]}`);
+        console.log(`Tracker URL: ${decoded["announce"]}\nLength: ${info["length"]}`);
 
+        // Compute hash of the bencoded info dict
         const infoHash = computeHash(decodedInfo);
-        console.log(`Info Hash: ${infoHash}`);
+        console.log(`Info Hash: ${infoHash}\nPiece Length: ${info["piece length"]}`);
+
+        // extract the pieces of the info dict in the torrent
+        const pieces = info["pieces"] as string;
+        // convert the pieces from binary string to hexadecimal
+        const hexPieces = Buffer.from(pieces, "binary").toString("hex");
+        
+        console.log(`Piece Hashes: `);
+        // NOTE : since each piece contains 20 bytes and 1 bte can accomodate 2 hexadecimal characters, so each piece will contain 40 characters
+        // printing each piece at an which are at intervals of 40 characters
+        for(let i=0; i<hexPieces.length; i+=40) {
+            console.log(`${hexPieces.substring(i, i+40)}`);
+        }
     }
     catch(err: any)
     {
