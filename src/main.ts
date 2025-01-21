@@ -89,7 +89,7 @@ function parseTorrent(torrent: string): bencodeTypeDict {
     const decoded = decodeBencode(torrent);
     const announceDict: bencodeTypeDict = {};
     announceDict["announce"] = (decoded as bencodeTypeDict)["announce"];
-    announceDict["length"] = ((decoded as bencodeTypeDict)["info"] as bencodeTypeDict["length"]);
+    announceDict["info"] = (decoded as bencodeTypeDict)["info"];
 
     return announceDict;
 }
@@ -110,11 +110,11 @@ else if(args[2] === "info") {
     try{
         const torrent = fs.readFileSync(torrentFile, "utf-8");
         const decoded = parseTorrent(torrent);
-        if(!decoded["announce"] || !decoded["length"]) {
+        if(!decoded["announce"] || !decoded["info"]) {
             throw new Error("Invalid torrent file");
         }
 
-        console.log(`Tracker URL: ${decoded["announce"]}\nLength: ${decoded["length"]}`);
+        console.log(`Tracker URL: ${decoded["announce"]}\nLength: ${(decoded["info"] as bencodeTypeDict)["length"]}`);
     }
     catch(err: any)
     {
