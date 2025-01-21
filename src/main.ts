@@ -85,6 +85,16 @@ function decodeBencode(bencodedValue: string): bencodeType {
     return decode();
 }
 
+// parsing the torrent file
+// torrent file is a dictionary (d...e) which contains: 
+// announce : URL of the tracker, which is a central server that keeps track of the peers participating in the sharing of a torrent
+/* info : {
+    length: size of the file in bytes, for single-file torrents,
+    name: suggested name to save the file,
+    piece length: number of bytes in each piece,
+    pieces: concatenated SHA-1 hashes of each piece
+    }
+*/
 function parseTorrent(torrent: string): bencodeTypeDict {
     const decoded = decodeBencode(torrent);
     const announceDict: bencodeTypeDict = {};
