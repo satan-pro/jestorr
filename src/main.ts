@@ -1,6 +1,14 @@
+const fs = require("fs");
+
 // Examples:
 // - decodeBencode("5:hello") -> "hello"
 // - decodeBencode("10:hello12345") -> "hello12345"
+// - decodeBencode("i123e") -> 123
+// - decodeBencode("i-123e") -> -123
+// - decodeBencode("l4:spam4:eggse") -> ["spam", "eggs"]
+// - decodeBencode("d3:cow3:moo4:spam4:eggse") -> { cow: "moo", spam: "eggs" }
+
+// used for dictionary parsing in bencode
 interface bencodeTypeDict {
     [key: string]: bencodeType;
 }
@@ -55,6 +63,7 @@ function decodeBencode(bencodedValue: string): bencodeType {
             return list;
         }
 
+        // Check for dictionary (d...e)
         else if (char==="d") {
             idx++; // Skip 'd'
             const dict: bencodeTypeDict = {};
@@ -62,11 +71,11 @@ function decodeBencode(bencodedValue: string): bencodeType {
                 if (idx >= bencodedValue.length) {
                     throw new Error("Invalid dictionary format");
                 }
-                const key = decode() as string;
-                const value = decode();
-                dict[key] = value;
+                const key = decode() as string; // first extract the key
+                const value = decode(); // extract the value for the current key
+                dict[key] = value; // add the key-value pair to the dict
             }
-            idx++;
+            idx++; // Skip 'e'
             return dict;
         }
         
@@ -76,14 +85,39 @@ function decodeBencode(bencodedValue: string): bencodeType {
     return decode();
 }
 
+function parseTorrent(torrent: string): bencodeTypeDict {
+    const decoded = decodeBencode(torrent);
+    const announceDict: bencodeTypeDict = {};
+    announceDict["announce"] = (decoded as bencodeTypeDict)["announce"];
+    announceDict["info"] = (decoded as bencodeTypeDict)["info"];
+
+    return announceDict;
+}
+
 const args = process.argv;
-const bencodedValue = args[3];
 
 if (args[2] === "decode") {
+    const bencodedValue = args[3];
     try {
         const decoded = decodeBencode(bencodedValue);
         console.log(JSON.stringify(decoded));
     } catch (error: any) {
         console.error(error.message);
+    }
+}
+else if(args[2] === "info") {
+    const torrentFile = args[3];
+    try{
+        const torrent = fs.readFileSync(torrentFile, "utf-8");
+        const decoded = parseTorrent(torrent);
+        if(!decoded["announce"] || !decoded["info"]) {
+            throw new Error("Invalid torrent file");
+        }
+
+        console.log(`Tracker URL: ${decoded["announce"]}\nLength: ${(decoded["info"] as bencodeTypeDict)["length"]}`);
+    }
+    catch(err: any)
+    {
+        console.log(err.message);
     }
 }
