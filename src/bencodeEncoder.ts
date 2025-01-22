@@ -36,10 +36,10 @@ const dictEncoder = (dict: bencodeTypeDict): string => {
 
         encoded+=`${key}`;
         if(typeof value==="string") {
-            encoded+= stringEncoder(value);
+            encoded.concat(stringEncoder(value));
         }
         else if(typeof value==="number") {
-            encoded+= numberEncoder(value);
+            encoded.concat(numberEncoder(value));
         }
         else if(Array.isArray(value)) {
             encoded+= listEncoder(value);
@@ -51,31 +51,32 @@ const dictEncoder = (dict: bencodeTypeDict): string => {
     return `d${encoded}e`;
 }
 
-export function encodeBencode(content: bencodeTypeDict): string {
-    let encoded = "d";
-    const keys = Object.keys(content);
-
-    for(const key of keys) {
-        const value = content[key];
-        encoded += `${key.length}:${key}`;
-
-        if(typeof(value)==="string") {
-            encoded+= `${value.length}:${value}`;
-        }
-        else if(typeof(value)==="number") {
-            encoded+= `i${value}e`;
-        }
-        else if(Array.isArray(value)) {
-            encoded+="l";
-            encoded+= value.map((item)=> encodeBencode(item as bencodeTypeDict)).join("");
-        }
-        else if(typeof(value)==="object") {
-            encoded+= encodeBencode(value as bencodeTypeDict);
-        }
+export function encodeBencode(value: any): string {
+    if(typeof value==="number") {
+        return `i${value}e`;
     }
-
-    encoded+="e";
-    return encoded;
+    else if(typeof value==="string") {
+        return `${value.length}:${value}`;
+    }
+    else if(Array.isArray(value)) {
+        let encodedList = "l";
+        for(let item of value) {
+            encodedList+= encodeBencode(item);
+        }
+        return `${encodedList}e`;
+    }
+    else if(typeof value==="object" && value!=null) {
+        let encodedDict = "d";
+        const sortedKeys = Object.keys(value).sort();
+        for(let key of sortedKeys) {
+            encodedDict+= encodeBencode(key);
+            encodedDict+= encodeBencode(value[key]);
+        }
+        return `${encodedDict}e`;
+    }
+    else {
+        throw new Error("Unsupported data type for Bencode encoding");
+    }
 }
 
 export { stringEncoder, numberEncoder, listEncoder, dictEncoder };

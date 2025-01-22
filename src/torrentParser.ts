@@ -12,16 +12,12 @@ const crypto = require("crypto");
     pieces: concatenated SHA-1 hashes of each piece
     }
 */
-export function parseTorrent(torrent: string): bencodeTypeDict {
+export function parseTorrent(torrent: string): any {
     const decoded = decodeBencode(torrent);
-    const torrentDict: bencodeTypeDict = {};
-    torrentDict["announce"] = (decoded as bencodeTypeDict)["announce"];
-    torrentDict["info"] = (decoded as bencodeTypeDict)["info"];
-
-    return torrentDict;
+    return decoded;
 }
 
-export function computeHash(content: string): string {
+export function computeHash(content: any): any {
    const hash = crypto.createHash("sha1");
    hash.update(content);
    return hash.digest("hex");

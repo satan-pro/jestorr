@@ -13,7 +13,7 @@ export interface bencodeTypeDict {
 
 export type bencodeType = string | number | bencodeType[] | bencodeTypeDict;
 
-export function decodeBencode(bencodedValue: string): bencodeType {
+export function decodeBencode(bencodedValue: string): any {
     if (!bencodedValue || bencodedValue.length === 0) {
         throw new Error("Invalid input: empty string");
     }
@@ -35,6 +35,20 @@ export function decodeBencode(bencodedValue: string): bencodeType {
             idx += length; // Move index past the string content
             return str;
         }
+        // if (!isNaN(parseInt(char))) {
+        //     const colonIndex = bencodedValue.indexOf(":", idx);
+        //     if (colonIndex === -1) throw new Error("Invalid string format");
+
+        //     const length = parseInt(bencodedValue.substring(idx, colonIndex));
+        //     idx = colonIndex + 1;
+
+        //     const rawStr = bencodedValue.substring(idx, idx + length);
+        //     idx += length;
+
+        //     // Detect binary strings and convert to hex
+        //     const isBinary = /[^\x20-\x7E]/.test(rawStr); // Check for non-printable characters
+        //     return isBinary ? Buffer.from(rawStr, "binary").toString("hex") : rawStr;
+        // }
 
         // Check for integer (i<number>e)
         else if (char === "i") {
@@ -50,7 +64,7 @@ export function decodeBencode(bencodedValue: string): bencodeType {
         // Check for list (l...e)
         else if (char === "l") {
             idx++; // Skip 'l'
-            const list: bencodeType[] = [];
+            const list: any[] = [];
             while (bencodedValue[idx] !== "e") {
                 if (idx >= bencodedValue.length) {
                     throw new Error("Invalid list format");
@@ -64,7 +78,7 @@ export function decodeBencode(bencodedValue: string): bencodeType {
         // Check for dictionary (d...e)
         else if (char==="d") {
             idx++; // Skip 'd'
-            const dict: bencodeTypeDict = {};
+            const dict: {[key: string]: any} = {};
             while(bencodedValue[idx]!=="e") {
                 if (idx >= bencodedValue.length) {
                     throw new Error("Invalid dictionary format");

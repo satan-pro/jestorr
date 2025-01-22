@@ -1,7 +1,8 @@
 const fs = require("fs");
 import { parseTorrent, computeHash } from "./torrentParser";
 import { bencodeType, bencodeTypeDict, decodeBencode } from "./bencodeDecoder";
-import { dictEncoder } from "./bencodeEncoder";
+import { dictEncoder, stringEncoder, encodeBencode } from "./bencodeEncoder";
+import { getPeers } from "./peers";
 
 const args = process.argv;
 
@@ -17,27 +18,28 @@ if (args[2] === "decode") {
 else if(args[2] === "info") {
     const torrentFile = args[3];
     try{
-        const torrent = fs.readFileSync(torrentFile, "utf-8");
+        const torrent = fs.readFileSync(torrentFile);
         // console.log(torrent);
-        const decoded = parseTorrent(torrent);
-        if(!decoded["announce"] || !decoded["info"]) {
+        const decoded = parseTorrent(torrent.toString("binary"));
+        if(decoded==null) {
             throw new Error("Invalid torrent file");
         }
 
         // Save the info dict of the torrent file
-        const info = decoded["info"] as bencodeTypeDict;
+        const info = decoded["info"];
         
         // Convert the info dict to a bencode string
-        const decodedInfo = dictEncoder(info);
+        const bencodedInfo = encodeBencode(info);
 
         console.log(`Tracker URL: ${decoded["announce"]}\nLength: ${info["length"]}`);
 
         // Compute hash of the bencoded info dict
-        const infoHash = computeHash(decodedInfo);
+        const encodedInfo = Buffer.from(bencodedInfo, "binary");
+        const infoHash = computeHash(encodedInfo);
         console.log(`Info Hash: ${infoHash}\nPiece Length: ${info["piece length"]}`);
 
         // extract the pieces of the info dict in the torrent
-        const pieces = info["pieces"] as string;
+        const pieces = info["pieces"];
         // convert the pieces from binary string to hexadecimal
         const hexPieces = Buffer.from(pieces, "binary").toString("hex");
         
@@ -47,6 +49,49 @@ else if(args[2] === "info") {
         for(let i=0; i<hexPieces.length; i+=40) {
             console.log(`${hexPieces.substring(i, i+40)}`);
         }
+    }
+    catch(err: any)
+    {
+        console.log(err.message);
+    }
+}
+else if(args[2]==="peers") {
+    getPeers(args[3]);
+}
+else if(args[2]==="test") {
+    const torrentFile = args[3];
+    try{
+        const torrent = fs.readFileSync(torrentFile, "utf-8");
+        console.log(torrent);
+        const decoded = parseTorrent(torrent) as {
+            announce: string
+            info: {
+              length: number
+              name: string
+              "piece length": number
+              pieces: string
+            }
+          };
+        if(!decoded["announce"] || !decoded["info"]) {
+            throw new Error("Invalid torrent file");
+        }
+
+        // let piecesBencode = stringEncoder((decoded["info"] as bencodeTypeDict)["pieces"]);
+        const info = decoded["info"];
+        console.log((decoded["info"] as bencodeTypeDict)["pieces"]);
+        console.log(typeof (decoded["info"] as bencodeTypeDict)["pieces"]);
+        console.log(((decoded["info"] as bencodeTypeDict)["pieces"] as string).length);
+        console.log(info["pieces"]);
+
+        function hexToBinary(hexString: string): string {
+            // Ensure the input is a valid hex string
+            if (!/^[0-9a-fA-F]+$/.test(hexString) || hexString.length % 2 !== 0) {
+                throw new Error("Invalid hex string");
+            }
+            return Buffer.from(hexString, "hex").toString("binary");
+        }
+
+        
     }
     catch(err: any)
     {
