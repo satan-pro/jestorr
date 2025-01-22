@@ -12,7 +12,7 @@ const crypto = require("crypto");
     pieces: concatenated SHA-1 hashes of each piece
     }
 */
-export function parseTorrent(torrent: string): any {
+export function parseTorrent(torrent: any): any {
     const decoded = decodeBencode(torrent);
     return decoded;
 }

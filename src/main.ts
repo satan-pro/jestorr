@@ -61,36 +61,6 @@ else if(args[2]==="peers") {
 else if(args[2]==="test") {
     const torrentFile = args[3];
     try{
-        const torrent = fs.readFileSync(torrentFile, "utf-8");
-        console.log(torrent);
-        const decoded = parseTorrent(torrent) as {
-            announce: string
-            info: {
-              length: number
-              name: string
-              "piece length": number
-              pieces: string
-            }
-          };
-        if(!decoded["announce"] || !decoded["info"]) {
-            throw new Error("Invalid torrent file");
-        }
-
-        // let piecesBencode = stringEncoder((decoded["info"] as bencodeTypeDict)["pieces"]);
-        const info = decoded["info"];
-        console.log((decoded["info"] as bencodeTypeDict)["pieces"]);
-        console.log(typeof (decoded["info"] as bencodeTypeDict)["pieces"]);
-        console.log(((decoded["info"] as bencodeTypeDict)["pieces"] as string).length);
-        console.log(info["pieces"]);
-
-        function hexToBinary(hexString: string): string {
-            // Ensure the input is a valid hex string
-            if (!/^[0-9a-fA-F]+$/.test(hexString) || hexString.length % 2 !== 0) {
-                throw new Error("Invalid hex string");
-            }
-            return Buffer.from(hexString, "hex").toString("binary");
-        }
-
         
     }
     catch(err: any)
