@@ -26,6 +26,69 @@ export function decodePeers(peers: string): string[] {
   return peerList;
 }
 
+function httpTracker(params: torrentParams): void {
+  const url = `${params.announceUrl}?info_hash=${params.infoHashEncoded}&peer_id=${params.peerId}&port=${params.port}&uploaded=${params.uploaded}&downloaded=${params.downloaded}&left=${params.left}&compact=${params.compact}`;
+
+  axios.get(url, {responseType: "arraybuffer"}).then((response) => {
+    const buffer = response.data;
+    console.log(response.data);
+    const decodedData = decodeBencode(Buffer.from(buffer).toString("binary"));
+    console.log(decodedData);
+    
+    decodePeers(decodedData.peers).forEach((peer)=> console.log(peer));
+  })
+  .catch((error)=>{
+    console.log(`Error fetching or decoding peers: ${error.message}`);
+  });
+
+  // fetch(url)
+    //   .then((response) => response.arrayBuffer())
+    //   .then((buffer) => {
+    //     const data = decodeBencode(Buffer.from(buffer).toString("binary"));
+    //     console.log("Decoded Data:", data);
+    //     // Call `getPeers` with the decoded data
+    //     decodePeers(data.peers).forEach((peer) => console.log(peer));
+    //   })
+    //   .catch((error) => {   
+    //     // Handle any errors
+    //     console.error("Error fetching or decoding:", error.message);
+    //   });
+}
+
+// function udpTracker(params: torrentParams): void {
+//   const reqOpts = {
+//     infoHash: params.infoHashEncoded,
+//     peerId: params.peerId,
+//     announce: [params.announceUrl],
+//     port: params.port,
+//   }
+
+//   const client = new Client(reqOpts);
+
+//   client.on('error', function(err: any) {
+//     console.log(err.message);
+//   });
+
+//   client.start();
+
+//   client.once('peer', function(ip: any){
+//     console.log(`Found a peer: ${ip} type: ${typeof(ip)}`);
+//   })
+// }
+
+
+
+interface torrentParams {
+  announceUrl: string,
+  infoHashEncoded: string,
+  peerId: string,
+  port: number,
+  uploaded: number,
+  downloaded: number,
+  left: number,
+  compact: number
+}
+
 export function getPeers(torrentFile: any): any {
   try {
     const torrent = fs.readFileSync(torrentFile);
@@ -51,32 +114,25 @@ export function getPeers(torrentFile: any): any {
     const left = info["length"];
     const compact = 1;
 
-    const url = `${decoded["announce"]}?info_hash=${infoHashEncoded}&peer_id=${peerId}&port=${port}&uploaded=${uploaded}&downloaded=${downloaded}&left=${left}&compact=${compact}`;
+    const trackerUrl = decoded["announce"];
 
-    axios.get(url, {responseType: "arraybuffer"}).then((response) => {
-      const buffer = response.data;
-      console.log(response.data);
-      const decodedData = decodeBencode(Buffer.from(buffer).toString("binary"));
-      console.log(decodedData);
-      
-      decodePeers(decodedData.peers).forEach((peer)=> console.log(peer));
-    })
-    .catch((error)=>{
-      console.log(`Error fetching or decoding peers: ${error.message}`);
-    });
+    const paramObj = {
+      announceUrl: trackerUrl,
+      infoHashEncoded: infoHashEncoded,
+      peerId: peerId,
+      port: port,
+      uploaded: uploaded,
+      downloaded: downloaded,
+      left: left,
+      compact: compact
+    }
 
-    // fetch(url)
-    //   .then((response) => response.arrayBuffer())
-    //   .then((buffer) => {
-    //     const data = decodeBencode(Buffer.from(buffer).toString("binary"));
-    //     console.log("Decoded Data:", data);
-    //     // Call `getPeers` with the decoded data
-    //     decodePeers(data.peers).forEach((peer) => console.log(peer));
-    //   })
-    //   .catch((error) => {   
-    //     // Handle any errors
-    //     console.error("Error fetching or decoding:", error.message);
-    //   });
+    if(trackerUrl.startsWith("http")) {
+      httpTracker(paramObj);
+    }
+    else {
+      console.log("Error: This version still doesnt support UDP trackers");
+    }
   } catch (err: any) {
     console.log(err.message);
   }
