@@ -3,6 +3,7 @@ import { parseTorrent, computeHash } from "./torrentParser";
 import { bencodeType, bencodeTypeDict, decodeBencode } from "./bencodeDecoder";
 import { dictEncoder, stringEncoder, encodeBencode } from "./bencodeEncoder";
 import { getPeers } from "./peers";
+import { getHandshake } from "./handshake";
 
 const args = process.argv;
 
@@ -67,4 +68,7 @@ else if(args[2]==="test") {
     {
         console.log(err.message);
     }
+}
+else if(args[2]==="handshake") {
+    getHandshake([args[3], args[4]]);
 }
