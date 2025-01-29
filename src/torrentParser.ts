@@ -22,3 +22,9 @@ export function computeHash(content: any): any {
    hash.update(content);
    return hash.digest("hex");
 } 
+
+export function computeHashBuffer(content: any): any {
+    const hash = crypto.createHash("sha1");
+    hash.update(content);
+    return hash.digest();
+}
