@@ -160,7 +160,7 @@ else if (args[2] === "download") {
 
                     switch(messageId) {
                         case 5: // Bitfield
-                            console.log(`Received bitfield, sending interested`);
+                            console.log(`Received bitfield: ${payload.toString("hex")}`);
                             const interested = Buffer.alloc(5);
                             interested.writeUInt32BE(1, 0);
                             interested.writeUInt8(2, 4);
